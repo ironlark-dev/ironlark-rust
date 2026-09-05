@@ -16,13 +16,8 @@ syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
 toml = { version = "1.1.4", default-features = false, features = ["parse"] }
-# protox parses proto in Rust, so no protoc and no C++ toolchain enters the
-# build of this crate or of a mod. It re-exports the prost-reflect the custom
-# options are read through, which is what keeps the two versions in step.
+# protox keeps protoc and any C++ toolchain out of the build
 protox = { workspace = true }
-# `format` off: prost-build would pull prettyplease in to lay out source this
-# crate immediately parses back into tokens.
+# format off: prettyplease would lay out source this crate reparses anyway
 prost-build = { workspace = true }
-# The same case conversion prost applies to a message name, from the same
-# version prost-build resolves.
 heck = "0.5"
