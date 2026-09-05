@@ -1,7 +1,3 @@
-# Releases, release-plz style: a bot PR accumulates the version bump and the
-# changelog from conventional commits; merging that PR is the release act. The
-# release job re-verifies everything, then waits in the crates-io environment
-# for a manual approval before anything reaches the registry.
 name: Release-plz
 on:
   push:
@@ -12,7 +8,7 @@ jobs:
     name: Open or update the release PR
     runs-on: ubuntu-24.04
     if: github.repository_owner == 'ironlark-dev'
-    permissions: {} # the app token carries the writes; the default token gets none
+    permissions: {}
     concurrency:
       group: release-plz-pr
       cancel-in-progress: false
@@ -43,7 +39,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.repository_owner == 'ironlark-dev'
     environment: crates-io
-    permissions: {} # the app token carries the writes; the default token gets none
+    permissions: {}
     concurrency:
       group: release-plz-release
       cancel-in-progress: false
@@ -57,7 +53,7 @@ jobs:
           rustup toolchain install 1.96.0 --profile minimal --component clippy,rustfmt
           rustup default 1.96.0
           rustup target add wasm32-wasip2
-      - name: Battery
+      - name: Verify before publishing
         run: |
           cargo fmt --check
           cargo test --workspace

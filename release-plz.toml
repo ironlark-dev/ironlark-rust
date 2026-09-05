@@ -1,5 +1,4 @@
 [workspace]
-# One version for the whole workspace; the two crates ship in lockstep.
 changelog_update = true
 git_release_enable = true
 git_tag_enable = true
@@ -8,7 +7,6 @@ semver_check = false
 [[package]]
 name = "ironlark-macros"
 version_group = "sdk"
-# One changelog and one release for the pair; ironlark's carries the notes.
 changelog_update = false
 git_release_enable = false
 git_tag_enable = false
