@@ -1105,7 +1105,7 @@ impl Entity {
 /// // Every instance this mod addressed under one prefix. The pattern matches
 /// // the ids this mod gave with `Entity::set_id`, never another mod's.
 /// async fn redden_the_doors() {
-///     let doors = match find("door/*") {
+///     let doors = match find("door") {
 ///         Ok(doors) => doors,
 ///         Err(e) => {
 ///             log::error!("the door lookup failed: {e}");
