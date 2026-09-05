@@ -25,8 +25,9 @@ jobs:
         env:
           COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
         run: mise run validate:commits
-  verify:
-    name: Battery
+  format:
+    name: Format
+    needs: validate
     runs-on: ubuntu-24.04
     # Checkout only; nothing here writes back.
     permissions:
@@ -37,16 +38,41 @@ jobs:
           persist-credentials: false
       - name: Toolchain
         run: |
-          rustup toolchain install 1.96.0 --profile minimal --component clippy,rustfmt
+          rustup toolchain install 1.96.0 --profile minimal --component rustfmt
+          rustup default 1.96.0
+      - run: cargo fmt --check
+  test:
+    name: Test
+    needs: format
+    runs-on: ubuntu-24.04
+    # Checkout only; nothing here writes back.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        run: |
+          rustup toolchain install 1.96.0 --profile minimal
+          rustup default 1.96.0
+      - run: cargo test --workspace
+  lint:
+    name: Lint
+    needs: format
+    runs-on: ubuntu-24.04
+    # Checkout only; nothing here writes back.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        run: |
+          rustup toolchain install 1.96.0 --profile minimal --component clippy
           rustup default 1.96.0
           rustup target add wasm32-wasip2
-      - name: Format
-        run: cargo fmt --check
-      - name: Tests
-        run: cargo test --workspace
-      - name: Lints, native
-        run: cargo clippy --workspace --all-targets -- -D warnings
-      - name: Lints, wasm
-        run: cargo clippy -p ironlark --target wasm32-wasip2 -- -D warnings
-      - name: Docs
-        run: RUSTDOCFLAGS="-D warnings" cargo doc -p ironlark --no-deps
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo clippy -p ironlark --target wasm32-wasip2 -- -D warnings
+      - run: RUSTDOCFLAGS="-D warnings" cargo doc -p ironlark --no-deps
