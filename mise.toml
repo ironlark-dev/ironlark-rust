@@ -1,0 +1,31 @@
+[tools]
+zizmor = "1.30.0"
+shellcheck = "0.11.0"
+cocogitto = "7.0.0"
+
+[tasks."validate:workflows"]
+description = "Audit the workflows and their shell"
+run = """
+zizmor --persona pedantic --offline .github/workflows/
+python3 - <<'PY'
+import yaml, subprocess, sys, tempfile, glob
+failed = False
+for f in glob.glob('.github/workflows/*.yml'):
+    wf = yaml.safe_load(open(f))
+    for name, job in wf['jobs'].items():
+        for i, step in enumerate(job['steps']):
+            if 'run' not in step:
+                continue
+            with tempfile.NamedTemporaryFile('w', suffix='.sh', delete=False) as t:
+                t.write('#!/usr/bin/env bash\\nset -euo pipefail\\n' + step['run'])
+                path = t.name
+            if subprocess.run(['shellcheck', '-s', 'bash', path]).returncode:
+                print(f'{f}: job {name} step {i}', file=sys.stderr)
+                failed = True
+sys.exit(1 if failed else 0)
+PY
+"""
+
+[tasks."validate:commits"]
+description = "Every commit in the range is a conventional commit"
+run = 'cog check "${COMMIT_RANGE:?set COMMIT_RANGE, e.g. origin/master..HEAD}"'
