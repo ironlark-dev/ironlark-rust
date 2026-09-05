@@ -1,0 +1,6 @@
+# `init` is mandatory, so declaring it says nothing twice.
+[mod]
+version = "0.1.0"
+
+[declares.server]
+hooks = ["init"]

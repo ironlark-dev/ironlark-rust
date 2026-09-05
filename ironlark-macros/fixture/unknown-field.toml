@@ -1,0 +1,6 @@
+# A rule field no hook carries yet.
+[mod]
+version = "0.1.0"
+
+[declares.client]
+hooks = [{ name = "sweep", every = "1s" }]

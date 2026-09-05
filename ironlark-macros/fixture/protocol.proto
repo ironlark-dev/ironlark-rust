@@ -1,0 +1,37 @@
+syntax = "proto3";
+package mods.ironlark_echo;
+import "ironlark/options.proto";
+
+// Signal: one token says who hears it. No braces anywhere.
+message Pressed {
+  option (ironlark.signal) = SERVER_MODS;
+  string target = 1;
+}
+
+message Positions {
+  option (ironlark.signal) = CLIENTS;
+  option (ironlark.transit.keep) = NEWEST;
+  repeated PlayerPos list = 1;
+}
+
+// No option, so no declaration: a helper type carried by another payload.
+message PlayerPos {
+  string name = 1;
+  float x = 2;
+  float z = 3;
+}
+
+message Value {
+  option (ironlark.signal) = CLIENTS;
+  uint32 value = 1;
+}
+
+// Requests are a native service block. The service name says which half
+// answers; proto itself checks the referenced types exist.
+service Server {
+  rpc Advance(AdvanceRequest) returns (Value);
+}
+
+message AdvanceRequest {
+  uint32 amount = 1;
+}

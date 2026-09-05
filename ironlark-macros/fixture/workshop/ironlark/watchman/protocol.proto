@@ -1,0 +1,5 @@
+// A borrower declaring nothing of its own: the owner's types must not land in
+// this mod's own namespace just because it minted none.
+syntax = "proto3";
+package mods.ironlark_watchman;
+import "ironlark/buttons/protocol.proto";

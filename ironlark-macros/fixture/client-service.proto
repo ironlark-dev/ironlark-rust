@@ -1,0 +1,15 @@
+syntax = "proto3";
+package mods.ironlark_echo;
+
+// The direction that is not served: a request the client half answers.
+service Client {
+  rpc Advance(AdvanceRequest) returns (AdvanceResponse);
+}
+
+message AdvanceRequest {
+  uint32 amount = 1;
+}
+
+message AdvanceResponse {
+  uint32 value = 1;
+}

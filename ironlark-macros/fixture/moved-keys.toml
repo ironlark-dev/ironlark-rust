@@ -1,0 +1,9 @@
+# Written against the previous grammar: communication in the manifest.
+[mod]
+version = "0.1.0"
+
+[declares]
+channels = ["latch"]
+
+[declares.server]
+hooks = ["on_tick"]

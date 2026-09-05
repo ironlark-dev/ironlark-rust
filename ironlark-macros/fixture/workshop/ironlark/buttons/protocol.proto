@@ -1,0 +1,20 @@
+syntax = "proto3";
+package mods.ironlark_buttons;
+import "ironlark/options.proto";
+
+// A button was pressed. The owner declares it; another mod may raise it.
+message Pressed {
+  option (ironlark.signal) = SERVER_MODS;
+  string target = 1;
+}
+
+// Crosses to the client realms, and supersedes.
+message Lit {
+  option (ironlark.signal) = CLIENTS;
+  option (ironlark.transit.keep) = NEWEST;
+  bool on = 1;
+}
+
+message Plain {
+  string note = 1;
+}

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package mods.ironlark_freeroam;
+import "ironlark/options.proto";
+import "ironlark/buttons/protocol.proto";
+
+message Roamed {
+  option (ironlark.signal) = CLIENTS;
+  string who = 1;
+  // Forces a cross-package reference in the generated code.
+  mods.ironlark_buttons.Plain note = 2;
+}

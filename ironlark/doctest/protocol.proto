@@ -1,0 +1,49 @@
+// The schema every documentation example declares its traffic against, so a
+// page's signals and requests are compiled rather than pasted. It is the door
+// mod the examples describe; a new name used by a page is added here.
+syntax = "proto3";
+package mods.ironlark_door;
+import "ironlark/options.proto";
+
+// The latch moved. Every client half of this mod hears it.
+message Latch {
+  option (ironlark.signal) = CLIENTS;
+  bool open = 1;
+}
+
+// Where this mod's doors stand. A newer raise supersedes an older, so a
+// listener sees the current answer rather than every step toward it.
+message Positions {
+  option (ironlark.signal) = CLIENTS;
+  option (ironlark.transit.keep) = NEWEST;
+  repeated Position list = 1;
+}
+
+// No option, so no declaration: a helper carried by another payload.
+message Position {
+  string name = 1;
+  float x = 2;
+  float z = 3;
+}
+
+// Stays on the server realm's bus, where the other mods that care hear it.
+message Opened {
+  option (ironlark.signal) = SERVER_MODS;
+  string name = 1;
+}
+
+// The service name says which half answers the requests inside it.
+service Server {
+  rpc Open(OpenRequest) returns (Latch);
+}
+
+message OpenRequest {
+  uint32 force = 1;
+}
+
+// Stays on the machine that raised it: one client half telling the others on
+// this machine what the player is looking at.
+message Aimed {
+  option (ironlark.signal) = CLIENT_MODS;
+  string at = 1;
+}

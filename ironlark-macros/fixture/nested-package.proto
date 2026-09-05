@@ -1,0 +1,8 @@
+syntax = "proto3";
+// Nested under the prefix, which proto resolves inward from and so cannot
+// reach the platform package through.
+package mods.ironlark.echo;
+
+message Pressed {
+  string target = 1;
+}

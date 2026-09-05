@@ -1,0 +1,14 @@
+[mod]
+version = "0.1.0"
+description = "Client-realm smoke test: a value round-trips through a signal, a request and a hook of the mod's own."
+
+[declares]
+sounds = ["ping"]
+
+[declares.server]
+hooks = ["on_join"]
+
+[declares.client]
+hooks = [
+    { name = "echo", default-bindings = ["key:f"] },
+]

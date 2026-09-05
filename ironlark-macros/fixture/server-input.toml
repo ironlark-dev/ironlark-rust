@@ -1,0 +1,6 @@
+# An input rule on the half no input edge is delivered to.
+[mod]
+version = "0.1.0"
+
+[declares.server]
+hooks = [{ name = "use_door", default-bindings = ["key:f5"] }]

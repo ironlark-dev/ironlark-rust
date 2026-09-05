@@ -1,0 +1,37 @@
+syntax = "proto3";
+package ironlark;
+import "google/protobuf/descriptor.proto";
+
+// Who hears a signal. The zero value is the majority case, never written.
+enum Audience {
+  SERVER_MODS = 0;   // stays on the server realm's bus
+  CLIENT_MODS = 1;   // stays on this machine's client bus
+  CLIENTS     = 2;   // crosses the network to every client realm
+}
+
+// What the host retains under pressure. The zero value is never written.
+enum Keep {
+  KEEP_ALL = 0;      // every raise is delivered
+  NEWEST   = 1;      // a newer raise supersedes an older; loss is inside the word
+}
+
+// Whether raises of one name arrive in raise order. Zero value never written.
+enum Order {
+  IN_ORDER = 0;
+  ANY      = 1;      // declared, not yet served: the host refuses it at load
+}
+
+extend google.protobuf.MessageOptions {
+  Audience signal = 50000;
+}
+
+// Lowercase deliberately: the message exists only to namespace the transit
+// extensions, so an author writes option (ironlark.transit.keep) = NEWEST;
+// with the whole name inside the parentheses.
+message transit {
+  extend google.protobuf.MessageOptions {
+    Keep keep   = 50001;
+    Order order = 50002;
+    // future delivery axes are extensions here, not new global words
+  }
+}

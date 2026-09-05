@@ -1,0 +1,12 @@
+syntax = "proto3";
+package mods.ironlark_wrong;
+import "ironlark/options.proto";
+
+// A service names the half that answers, so `Echo` names nothing.
+service Echo {
+  rpc Advance(AdvanceRequest) returns (AdvanceRequest);
+}
+
+message AdvanceRequest {
+  uint32 amount = 1;
+}

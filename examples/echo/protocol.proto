@@ -1,0 +1,23 @@
+// The whole of what the two halves say to each other: one value, one ask to
+// advance it. Both halves read this file, and each declaration says where it
+// goes.
+syntax = "proto3";
+package mods.ironlark_echo;
+import "ironlark/options.proto";
+
+// The value, as the server states it. It crosses to every client half, and it
+// is also what the advance answers with.
+message Value {
+  option (ironlark.signal) = CLIENTS;
+  uint32 value = 1;
+}
+
+// The service name says which half answers: the value lives on the server.
+service Server {
+  rpc Advance(AdvanceRequest) returns (Value);
+}
+
+// A client's ask. The server decides what the value becomes, and may refuse.
+message AdvanceRequest {
+  uint32 amount = 1;
+}

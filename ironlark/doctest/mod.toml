@@ -1,0 +1,21 @@
+# The manifest every documentation example declares against, so a page's
+# declaration is compiled rather than pasted. It is the door mod the examples
+# describe; communication is in doctest/protocol.proto beside it.
+
+[mod]
+version = "0.1.0"
+
+[declares]
+sounds = ["slam"]
+
+[[declares.archetype]]
+id = "door"
+scene = "door.glb"
+
+[declares.server]
+hooks = ["on_tick"]
+
+[declares.client]
+hooks = [
+    { name = "use_door", default-bindings = ["key:f5", "pad:north"] },
+]

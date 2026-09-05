@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = ["ironlark", "ironlark-macros", "examples/echo/server", "examples/echo/client"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0"
+repository = "https://github.com/ironlark-dev/ironlark-rust"
+
+[workspace.dependencies]
+ironlark-macros = { path = "ironlark-macros", version = "0.1.0" }
+wit-bindgen = "0.60"
+protox = "0.9.1"
+prost-build = { version = "0.14.4", default-features = false }
+prost = "0.14.4"
+prost-types = "0.14.4"
+log = "0.4"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = "debuginfo"

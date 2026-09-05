@@ -1,0 +1,16 @@
+# The manifest the macro's own tests read: one engine hook on the server half,
+# two of the mod's own on the client half.
+[mod]
+version = "0.1.0"
+
+[declares]
+sounds = ["slam"]
+
+[declares.server]
+hooks = ["on_tick"]
+
+[declares.client]
+hooks = [
+    { name = "use_door", default-bindings = ["key:f5", "pad:north"] },
+    { name = "latch", default-bindings = ["key:g"] },
+]
