@@ -3,14 +3,14 @@ resolver = "2"
 members = ["ironlark", "ironlark-macros", "examples/echo/server", "examples/echo/client"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.85"
 license = "Apache-2.0"
 repository = "https://github.com/ironlark-dev/ironlark-rust"
 
 [workspace.dependencies]
-ironlark-macros = { path = "ironlark-macros", version = "0.1.0" }
+ironlark-macros = { path = "ironlark-macros", version = "0.1.1" }
 wit-bindgen = "0.60"
 protox = "0.9.1"
 prost-build = { version = "0.14.4", default-features = false }
