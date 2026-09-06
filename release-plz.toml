@@ -1,14 +1,12 @@
 [workspace]
-changelog_update = true
-git_release_enable = true
-git_tag_enable = true
-semver_check = false
+release_commits = "^(feat|fix)[(:!]"
+publish = false
+git_release_enable = false
 
 [[package]]
 name = "ironlark-macros"
 version_group = "sdk"
 changelog_update = false
-git_release_enable = false
 git_tag_enable = false
 
 [[package]]
@@ -16,4 +14,3 @@ name = "ironlark"
 version_group = "sdk"
 changelog_path = "./CHANGELOG.md"
 git_tag_name = "v{{ version }}"
-git_release_name = "v{{ version }}"
