@@ -12,11 +12,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3.6.3
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
       - name: Workflows are audited and their shell is checked
         run: mise run validate:workflows
       - name: Every commit is a conventional commit
@@ -30,13 +30,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Toolchain
         run: |
-          rustup toolchain install 1.96.0 --profile minimal --component rustfmt
-          rustup default 1.96.0
+          rustup toolchain install 1.98.1 --profile minimal --component rustfmt
+          rustup default 1.98.1
       - run: cargo fmt --check
   test:
     name: Test
@@ -45,13 +45,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Toolchain
         run: |
-          rustup toolchain install 1.96.0 --profile minimal
-          rustup default 1.96.0
+          rustup toolchain install 1.98.1 --profile minimal
+          rustup default 1.98.1
       - run: cargo test --workspace
   lint:
     name: Lint
@@ -60,13 +60,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Toolchain
         run: |
-          rustup toolchain install 1.96.0 --profile minimal --component clippy
-          rustup default 1.96.0
+          rustup toolchain install 1.98.1 --profile minimal --component clippy
+          rustup default 1.98.1
           rustup target add wasm32-wasip2
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo clippy -p ironlark --target wasm32-wasip2 -- -D warnings
