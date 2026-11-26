@@ -35,11 +35,9 @@
 //!             log::error!("the map answered no points");
 //!             return;
 //!         }
-//!         let at = points[NEXT.update(|n| {
-//!             let i = *n;
-//!             *n += 1;
-//!             i
-//!         }) % points.len()];
+//!         let index = NEXT.get();
+//!         NEXT.update(|n| n + 1);
+//!         let at = points[index % points.len()];
 //!         // The host's own body archetype: no manifest declares it,
 //!         // so there is no item and the name travels as a string.
 //!         match Entity::spawn("character", at).await {
@@ -104,11 +102,9 @@ use crate::server::entity::SpawnPoint;
 ///             log::error!("the map answered no points");
 ///             return;
 ///         }
-///         let at = points[NEXT.update(|n| {
-///             let i = *n;
-///             *n += 1;
-///             i
-///         }) % points.len()];
+///         let index = NEXT.get();
+///         NEXT.update(|n| n + 1);
+///         let at = points[index % points.len()];
 ///         // The host's own body archetype: no manifest declares it, so
 ///         // there is no item and the name travels as a string.
 ///         match Entity::spawn("character", at).await {

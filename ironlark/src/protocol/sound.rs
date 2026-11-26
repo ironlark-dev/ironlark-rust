@@ -169,7 +169,8 @@ pub fn unrouted_hook(hook: u32) {
     crate::state! {
         static WARNED: bool = false;
     }
-    if !WARNED.update(|warned| core::mem::replace(warned, true)) {
+    if !WARNED.get() {
+        WARNED.set(true);
         log::warn!("no author hook answers hook id {hook}");
     }
 }

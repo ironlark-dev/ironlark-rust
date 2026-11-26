@@ -1187,11 +1187,11 @@ pub fn find(pattern: &str) -> Result<Vec<Entity>> {
 ///
 /// impl ServerMod for Doorman {
 ///     async fn on_join(_ctx: Context, player: Player) {
-///         PRESENT.update(|present| present.push(player.session()));
+///         PRESENT.with_borrow_mut(|present| present.push(player.session()));
 ///     }
 ///
 ///     async fn on_tick(_ctx: Context, _dt: f32) {
-///         for session in PRESENT.update(|present| present.clone()) {
+///         for session in PRESENT.with_borrow_mut(|present| present.clone()) {
 ///             // A fresh handle each time, from the id that outlived the event.
 ///             match body_of(session).await {
 ///                 Ok(body) => match body.translation().await {

@@ -60,7 +60,8 @@ where
             }
         })
     });
-    if TABLES.update(|t| t.signals.insert(id, dispatch)).is_some() {
+    let replaced = TABLES.with_borrow_mut(|t| t.signals.insert(id, dispatch));
+    if replaced.is_some() {
         log::debug!("signal '{name}' is now heard by the handler registered last");
     }
 }
@@ -88,7 +89,8 @@ where
             Ok(protocol::encode(&answer))
         })
     });
-    if TABLES.update(|t| t.requests.insert(id, dispatch)).is_some() {
+    let replaced = TABLES.with_borrow_mut(|t| t.requests.insert(id, dispatch));
+    if replaced.is_some() {
         log::debug!("request '{name}' is now answered by the handler registered last");
     }
 }
@@ -99,13 +101,13 @@ pub(crate) async fn dispatch_signal(
     source: SourceId,
     payload: Vec<u8>,
 ) {
-    let handler = TABLES.update(|t| t.signals.get(&id).map(Rc::clone));
+    let handler = TABLES.with_borrow_mut(|t| t.signals.get(&id).map(Rc::clone));
     match handler {
         Some(h) => h(ctx, source, payload).await,
         None => {
             // Deduped per (signal, source): a hostile raiser repeating an
             // unobserved signal cannot flood the log.
-            let fresh = TABLES.update(|t| t.warned.insert((id, source)));
+            let fresh = TABLES.with_borrow_mut(|t| t.warned.insert((id, source)));
             if fresh {
                 log::warn!("no handler observes signal {id} raised by source {source}");
             }
@@ -119,7 +121,7 @@ pub(crate) async fn dispatch_request(
     id: RequestId,
     payload: Vec<u8>,
 ) -> Result<Vec<u8>, Refusal> {
-    let handler = TABLES.update(|t| t.requests.get(&id).map(Rc::clone));
+    let handler = TABLES.with_borrow_mut(|t| t.requests.get(&id).map(Rc::clone));
     match handler {
         Some(h) => h(ctx, caller, payload).await,
         None => Err(Refusal::Unknown {

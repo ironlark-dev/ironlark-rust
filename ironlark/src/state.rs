@@ -1,4 +1,4 @@
-//! What a mod remembers between events: one macro declares a cell, and three
+//! What a mod remembers between events: one macro declares a cell, and four
 //! verbs reach what is in it.
 
 #[cfg(target_arch = "wasm32")]
@@ -10,9 +10,9 @@ use core::cell::{Cell, UnsafeCell};
 /// `static` cell is the natural home for what it remembers. This macro is the
 /// only door to one. It writes the type once, takes any expression as the
 /// starting value, and mints a [`State`] cell reached through
-/// [`get`](State::get), [`set`](State::set) and [`update`](State::update). How
-/// the cell is laid out belongs to this macro, so nothing a mod writes depends
-/// on it.
+/// [`get`](State::get), [`set`](State::set), [`update`](State::update) and
+/// [`with_borrow_mut`](State::with_borrow_mut). How the cell is laid out
+/// belongs to this macro, so nothing a mod writes depends on it.
 ///
 /// One block declares as many cells as the mod wants, each with its own type
 /// and starting expression. Doc comments and visibility go where they would on
@@ -32,7 +32,8 @@ use core::cell::{Cell, UnsafeCell};
 /// A cell is memory inside the guest. Nothing here crosses into the host, so
 /// nothing here answers a [`Result`](crate::Result). The one way out is a
 /// panic, and reaching it takes reentering one cell from inside its own
-/// [`update`](State::update); [`State`] tells that story and what it costs.
+/// [`update`](State::update) or [`with_borrow_mut`](State::with_borrow_mut);
+/// [`State`] tells that story and what it costs.
 ///
 /// ```
 /// // The prelude mints SessionId. `state!` is spelled in full.
@@ -45,10 +46,10 @@ use core::cell::{Cell, UnsafeCell};
 ///     static PENDING: Vec<SessionId> = Vec::new();
 /// }
 ///
-/// // A number is copied out and put back. A list is worked on where it lies.
+/// // A number goes out and comes back changed. A list is worked on where it lies.
 /// fn record_opening(player: SessionId) {
-///     OPENED.set(OPENED.get() + 1);
-///     PENDING.update(|pending| pending.push(player));
+///     OPENED.update(|opened| opened + 1);
+///     PENDING.with_borrow_mut(|pending| pending.push(player));
 /// }
 /// ```
 #[macro_export]
@@ -71,14 +72,17 @@ macro_rules! state {
 
 /// Where a mod keeps what it remembers between events.
 ///
-/// [`state!`](macro@crate::state) declares a cell; this is what it declares. Three
-/// verbs reach the value inside. [`get`](State::get) copies it out and is
+/// [`state!`](macro@crate::state) declares a cell; this is what it declares.
+/// Four verbs reach the value inside. [`get`](State::get) copies it out and is
 /// offered only where a copy is the whole of the value — a number, a flag, an
 /// id, a [`SessionId`](crate::SessionId). [`set`](State::set) replaces it.
-/// [`update`](State::update) lends it out in place for the body of a closure
-/// and answers whatever that body answers, which is how a collection is
-/// worked on without ever being copied. The compiler steers a value that
-/// cannot be copied to `update` on its own.
+/// [`update`](State::update) takes that copy, hands it to a closure and puts
+/// the answer back, which is how a scalar is counted on.
+/// [`with_borrow_mut`](State::with_borrow_mut) lends the value out in place
+/// for the body of a closure and answers whatever that body answers, which is
+/// how a collection is worked on without ever being copied and how a computed
+/// answer comes back out. The compiler steers a value that cannot be copied to
+/// `with_borrow_mut` on its own.
 ///
 /// A cell is not shared with anything. The guest is single-threaded and the
 /// cell is reached from one mod's own handlers, so there is no lock here and
@@ -107,7 +111,7 @@ macro_rules! state {
 ///         OPEN.set(true);
 ///     }
 ///     // A list is edited where it lies. Nothing is copied out.
-///     OPENINGS.update(|tally| match tally.iter_mut().find(|row| row.player == player) {
+///     OPENINGS.with_borrow_mut(|tally| match tally.iter_mut().find(|row| row.player == player) {
 ///         Some(row) => row.times += 1,
 ///         None => tally.push(Opening { player, times: 1 }),
 ///     });
@@ -116,7 +120,7 @@ macro_rules! state {
 ///
 /// # Nothing refuses
 ///
-/// None of the three verbs reaches the host, so none of them answers a
+/// None of the four verbs reaches the host, so none of them answers a
 /// [`Result`](crate::Result). The only failure a cell has is the reentry panic
 /// below.
 ///
@@ -129,9 +133,10 @@ macro_rules! state {
 /// world that the second handler has already moved on from, and the second
 /// handler's work is what gets lost.
 ///
-/// [`update`](State::update) cannot span an await at all — its closure is
-/// synchronous, which is what makes the access safe without a lock. `get` and
-/// `set` are single acts that end before they return, so nothing is held. The
+/// [`update`](State::update) and [`with_borrow_mut`](State::with_borrow_mut)
+/// cannot span an await at all — their closures are synchronous, which is what
+/// makes the access safe without a lock. `get` and `set` are single acts that
+/// end before they return, so nothing is held. The
 /// pattern is to copy out, await, and write back a change rather than a whole
 /// value; merging the change with whatever else happened meanwhile is the
 /// mod's own decision, because only the mod knows what its two handlers mean
@@ -147,15 +152,15 @@ macro_rules! state {
 ///
 /// async fn greet_everyone() {
 ///     // Copy out everything the awaits need. The cell is free from here.
-///     let waiting = PENDING.update(|pending| pending.clone());
+///     let waiting = PENDING.with_borrow_mut(|pending| pending.clone());
 ///     let mut greeted = Vec::with_capacity(waiting.len());
 ///     for player in waiting {
-///         // ... await a verb here, which `update` could not have spanned ...
+///         // ... await a verb here, which the closure could not have spanned ...
 ///         greeted.push(player);
 ///     }
 ///     // Another handler may have added to the list while this one awaited,
 ///     // so write back the change: drop what was greeted, keep the rest.
-///     PENDING.update(|pending| pending.retain(|player| !greeted.contains(player)));
+///     PENDING.with_borrow_mut(|pending| pending.retain(|player| !greeted.contains(player)));
 /// }
 /// ```
 ///
@@ -177,16 +182,17 @@ macro_rules! state {
 ///
 /// # Reentry
 ///
-/// Reaching one cell from inside its own [`update`](State::update) panics by
-/// design rather than aliasing the value. Only that cell is closed for the
-/// duration of the closure: `get`, `set` and `update` on any other cell are
-/// fine, and nesting across different cells is the normal thing.
+/// Reaching one cell from inside its own [`update`](State::update) or
+/// [`with_borrow_mut`](State::with_borrow_mut) closure panics by design rather
+/// than aliasing the value. Only that cell is closed for the duration of the
+/// closure: every verb on any other cell is fine, and nesting across different
+/// cells is the normal thing.
 ///
 /// A panic is not cheap here. The host counts a trapping guest against the mod
 /// and retires the instance, so reentering one cell costs the mod every cell
-/// it has. The rule that keeps it away is the same one that keeps `update` off
-/// an await: do the smallest thing inside the closure, call nothing unknown
-/// from it, and leave.
+/// it has. The rule that keeps it away is the same one that keeps a closure
+/// off an await: do the smallest thing inside it, call nothing unknown from
+/// it, and leave.
 pub struct State<T> {
     init: fn() -> T,
     #[cfg(target_arch = "wasm32")]
@@ -216,8 +222,9 @@ impl<T: 'static> State<T> {
     /// Copies the value out, building it on first use.
     ///
     /// Offered only where a copy is the whole of the value. Anything else has
-    /// no `get`, and [`update`](State::update) is how it is reached, so the
-    /// compiler decides this rather than the author remembering to.
+    /// no `get`, and [`with_borrow_mut`](State::with_borrow_mut) is how it is
+    /// reached, so the compiler decides this rather than the author
+    /// remembering to.
     pub fn get(&self) -> T
     where
         T: Copy,
@@ -234,8 +241,47 @@ impl<T: 'static> State<T> {
         self.enter(|slot| *slot = Some(value));
     }
 
+    /// Copies the value out, hands it to `f`, and puts back what `f` answers.
+    ///
+    /// This is [`Cell::update`](core::cell::Cell::update)'s shape: a value in,
+    /// a value out, written back, and nothing returned. Reach for it on the
+    /// scalars a mod counts with — a tally, a flag, an accumulator — and read
+    /// the result with [`get`](State::get) when the new value is wanted.
+    /// Anything that cannot be copied, and anything that has to answer a
+    /// computed result, is [`with_borrow_mut`](State::with_borrow_mut)'s job.
+    ///
+    /// The closure is synchronous, so it cannot span an `await`, and reaching
+    /// this same cell from inside `f` panics rather than aliasing the value.
+    ///
+    /// ```
+    /// ironlark::state! {
+    ///     /// How many doors this mod has opened since it loaded.
+    ///     static OPENED: u32 = 0;
+    /// }
+    ///
+    /// OPENED.update(|opened| opened + 1);
+    /// OPENED.update(|opened| opened + 1);
+    /// assert_eq!(OPENED.get(), 2);
+    /// ```
+    pub fn update(&self, f: impl FnOnce(T) -> T)
+    where
+        T: Copy,
+    {
+        self.enter(|slot| {
+            let held = *slot.get_or_insert_with(self.init);
+            *slot = Some(f(held));
+        });
+    }
+
     /// Lends the value out for the body of `f`, building it on first use, and
     /// answers whatever `f` answers.
+    ///
+    /// This is [`LocalKey::with_borrow_mut`](std::thread::LocalKey::with_borrow_mut)'s shape:
+    /// the value is worked on where it lies, never copied, and the closure's
+    /// answer comes back out. Reach for it for a collection, for anything a
+    /// [`get`](State::get) is not offered on, and for a scalar whose new value
+    /// is not the answer wanted — a "was this the first time" flag, a tick
+    /// accumulator reporting whether it came due.
     ///
     /// The closure is synchronous, so it cannot span an `await`. That is what
     /// makes the access safe without a lock, and it is why a handler finishes
@@ -244,7 +290,19 @@ impl<T: 'static> State<T> {
     /// Reaching this same cell from inside `f` panics with the reason rather
     /// than aliasing the value, and a panicking guest costs the mod its whole
     /// instance. Other cells are untouched by this one being open.
-    pub fn update<R>(&self, f: impl FnOnce(&mut T) -> R) -> R {
+    ///
+    /// ```
+    /// use ironlark::server::prelude::*;
+    ///
+    /// ironlark::state! {
+    ///     /// The participants this mod still owes a greeting.
+    ///     static PENDING: Vec<SessionId> = Vec::new();
+    /// }
+    ///
+    /// PENDING.with_borrow_mut(|pending| pending.push(SessionId::new(7)));
+    /// assert_eq!(PENDING.with_borrow_mut(|pending| pending.len()), 1);
+    /// ```
+    pub fn with_borrow_mut<R>(&self, f: impl FnOnce(&mut T) -> R) -> R {
         self.enter(|slot| f(slot.get_or_insert_with(self.init)))
     }
 
@@ -268,8 +326,7 @@ impl<T: 'static> State<T> {
     }
 }
 
-const REENTERED: &str =
-    "State cell reentered from inside its own `update`; call nothing unknown from the closure";
+const REENTERED: &str = "State cell reentered from inside its own closure; call nothing unknown from an `update` or `with_borrow_mut` body";
 
 // Native `cargo test` semantics: each test thread gets its own value, stored
 // per (thread, cell address) so one `static` cell never races across tests.
@@ -329,8 +386,19 @@ mod tests {
             static CELL: u32 = 7;
         }
         assert_eq!(CELL.get(), 7);
-        CELL.update(|held| *held += 1);
+        CELL.with_borrow_mut(|held| *held += 1);
         assert_eq!(CELL.get(), 8);
+    }
+
+    #[test]
+    fn update_writes_back_what_the_closure_answers() {
+        crate::state! {
+            static CELL: u32 = 7;
+        }
+        CELL.update(|held| held + 1);
+        assert_eq!(CELL.get(), 8);
+        CELL.update(|held| held * 2);
+        assert_eq!(CELL.get(), 16);
     }
 
     #[test]
@@ -339,12 +407,13 @@ mod tests {
             static CELL: Vec<u8> = panic!("a set cell must never build its starting value");
         }
         CELL.set(vec![1, 2, 3]);
-        assert_eq!(CELL.update(|held| held.len()), 3);
+        assert_eq!(CELL.with_borrow_mut(|held| held.len()), 3);
     }
 
     #[test]
     fn nesting_across_different_cells_works() {
-        let sum = COUNTER.update(|count| OTHER.update(|other| *count as usize + other.len()));
+        let sum = COUNTER
+            .with_borrow_mut(|count| OTHER.with_borrow_mut(|other| *count as usize + other.len()));
         assert_eq!(sum, 7);
     }
 
@@ -353,7 +422,7 @@ mod tests {
         crate::state! {
             static CELL: Vec<u8> = vec![4; 2];
         }
-        assert_eq!(CELL.update(|held| held.clone()), vec![4, 4]);
+        assert_eq!(CELL.with_borrow_mut(|held| held.clone()), vec![4, 4]);
     }
 
     #[test]
@@ -362,6 +431,15 @@ mod tests {
         crate::state! {
             static CELL: u32 = 0;
         }
-        CELL.update(|_| CELL.get());
+        CELL.with_borrow_mut(|_| CELL.get());
+    }
+
+    #[test]
+    #[should_panic(expected = "reentered")]
+    fn reentry_from_inside_update_panics() {
+        crate::state! {
+            static CELL: u32 = 0;
+        }
+        CELL.update(|held| held + CELL.get());
     }
 }

@@ -67,12 +67,12 @@ pub use wide::{EventId, ProfileId, UserId};
 /// impl ServerMod for Door {
 ///     async fn on_join(_ctx: Context, player: Player) {
 ///         let who = player.session();
-///         PRESENT.update(|present| present.push(who));
+///         PRESENT.with_borrow_mut(|present| present.push(who));
 ///     }
 ///
 ///     async fn on_leave(_ctx: Context, player: Player, _reason: LeaveReason) {
 ///         let who = player.session();
-///         PRESENT.update(|present| present.retain(|held| *held != who));
+///         PRESENT.with_borrow_mut(|present| present.retain(|held| *held != who));
 ///     }
 /// }
 /// ```

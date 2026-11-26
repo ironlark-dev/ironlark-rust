@@ -44,7 +44,7 @@ use core::fmt;
 /// impl ServerMod for Doorman {
 ///     async fn on_join(_ctx: Context, player: Player) {
 ///         // The id outlives the handle. A `Player` in that cell would not.
-///         ROSTER.update(|seen| seen.push(player.session()));
+///         ROSTER.with_borrow_mut(|seen| seen.push(player.session()));
 ///     }
 /// }
 /// ```

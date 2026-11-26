@@ -78,7 +78,7 @@ pub enum Arrival {
 ///     async fn on_leave(_ctx: Context, player: Player, reason: LeaveReason) {
 ///         // The number is what was kept. The handle is not keepable.
 ///         let id = player.session();
-///         PRESENT.update(|present| present.retain(|held| *held != id));
+///         PRESENT.with_borrow_mut(|present| present.retain(|held| *held != id));
 ///         log::info!("{player} is gone ({reason:?})");
 ///     }
 /// }
@@ -356,14 +356,11 @@ pub enum PhysicsObject {
 ///         _point: Vec3,
 ///         edge: ContactEdge,
 ///     ) {
-///         let now = INSIDE.update(|count| {
-///             match edge {
-///                 ContactEdge::Started => *count += 1,
-///                 ContactEdge::Ended => *count = count.saturating_sub(1),
-///             }
-///             *count
+///         INSIDE.update(|count| match edge {
+///             ContactEdge::Started => count + 1,
+///             ContactEdge::Ended => count.saturating_sub(1),
 ///         });
-///         log::info!("{now} standing in the doorway");
+///         log::info!("{} standing in the doorway", INSIDE.get());
 ///     }
 /// }
 /// ```

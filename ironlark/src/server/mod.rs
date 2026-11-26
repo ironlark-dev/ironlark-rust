@@ -90,7 +90,7 @@
 //! impl ServerMod for Register {
 //!     async fn on_join(_ctx: Context, player: Player) {
 //!         // The session id was stamped into the handle and outlives it.
-//!         SEEN.update(|seen| seen.push(player.session()));
+//!         SEEN.with_borrow_mut(|seen| seen.push(player.session()));
 //!     }
 //! }
 //! ```

@@ -14,19 +14,19 @@ crate::state! {
 }
 
 pub(crate) fn signal(name: &'static str) -> Result<SignalId> {
-    if let Some(id) = SIGNALS.update(|held| held.get(name).copied()) {
+    if let Some(id) = SIGNALS.with_borrow_mut(|held| held.get(name).copied()) {
         return Ok(id);
     }
     let id = crate::shared::resolve::signal(name)?;
-    SIGNALS.update(|held| held.insert(name, id));
+    SIGNALS.with_borrow_mut(|held| held.insert(name, id));
     Ok(id)
 }
 
 pub(crate) fn request(name: &'static str) -> Result<RequestId> {
-    if let Some(id) = REQUESTS.update(|held| held.get(name).copied()) {
+    if let Some(id) = REQUESTS.with_borrow_mut(|held| held.get(name).copied()) {
         return Ok(id);
     }
     let id = crate::shared::resolve::request(name)?;
-    REQUESTS.update(|held| held.insert(name, id));
+    REQUESTS.with_borrow_mut(|held| held.insert(name, id));
     Ok(id)
 }
