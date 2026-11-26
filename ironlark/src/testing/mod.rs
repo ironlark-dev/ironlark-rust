@@ -25,11 +25,8 @@
 //! }
 //!
 //! async fn announce(_ctx: Context, player: Player) {
-//!     let count = ARRIVED.update(|n| {
-//!         *n += 1;
-//!         *n
-//!     });
-//!     log::info!("{player} is number {count}");
+//!     ARRIVED.update(|n| n + 1);
+//!     log::info!("{player} is number {}", ARRIVED.get());
 //!     // Synchronous: a signal awaits no answer, so there is nothing to await.
 //!     if let Err(e) = signal(&protocol::Latch { open: false }) {
 //!         log::warn!("the door state did not reach the arrival: {e}");

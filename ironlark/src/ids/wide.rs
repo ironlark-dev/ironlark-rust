@@ -88,7 +88,7 @@ wide_id!(
     ///         // None is an ordinary answer: a participant need not have an
     ///         // account behind them.
     ///         match player.user() {
-    ///             Some(user) => ACCOUNTS.update(|seen| seen.push(user)),
+    ///             Some(user) => ACCOUNTS.with_borrow_mut(|seen| seen.push(user)),
     ///             None => log::info!("{player} arrived with no account"),
     ///         }
     ///     }

@@ -57,12 +57,12 @@ const NAME: &str = "name";
 ///
 ///     async fn on_join(_ctx: Context, player: Player) {
 ///         let who = player.session();
-///         PRESENT.update(|held| held.push(who));
+///         PRESENT.with_borrow_mut(|held| held.push(who));
 ///     }
 ///
 ///     async fn on_leave(_ctx: Context, player: Player, _reason: LeaveReason) {
 ///         let who = player.session();
-///         PRESENT.update(|held| held.retain(|held| *held != who));
+///         PRESENT.with_borrow_mut(|held| held.retain(|held| *held != who));
 ///     }
 /// }
 /// ```

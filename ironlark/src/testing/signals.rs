@@ -189,7 +189,7 @@ pub fn take_signals() -> Vec<RaisedSignal> {
 /// // The handler takes the payload directly; the source is host-stamped.
 /// async fn on_opened(_ctx: Context, from: SourceId, fact: protocol::Opened) {
 ///     if resolve::source("acme:doors") == Ok(from) {
-///         SEEN.update(|seen| seen.push(fact.name));
+///         SEEN.with_borrow_mut(|seen| seen.push(fact.name));
 ///     }
 /// }
 ///
@@ -203,7 +203,7 @@ pub fn take_signals() -> Vec<RaisedSignal> {
 ///     block_on(dispatch_signal::<protocol::Opened>(event, "acme:doors", raised.payload));
 /// }
 ///
-/// assert_eq!(SEEN.update(|seen| seen.clone()), vec!["front".to_string()]);
+/// assert_eq!(SEEN.with_borrow_mut(|seen| seen.clone()), vec!["front".to_string()]);
 /// ```
 ///
 /// # What delivery checks here, and what a session checks
