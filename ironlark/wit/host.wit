@@ -214,8 +214,8 @@ interface signal-to {
 interface request {
   use types.{error, request-id};
 
-  /// The one awaited verb in the contract. Payload and answer are capped, and
-  /// the refusal carries the cap.
+  /// The one awaited verb in the contract. The payload is capped and the
+  /// refusal carries the cap; the answer is not size-bound.
   request: async func(request: request-id, payload: list<u8>) -> result<list<u8>, error>;
 }
 
@@ -432,7 +432,8 @@ interface server-api {
 
   /// `request` is one this mod declared; routing already established whose it
   /// is. `player` is the one whose client half asked, lent for this call.
-  /// Payload and answer are capped, the refusal carries the cap.
+  /// The payload is capped, the refusal carries the cap; the answer is not
+  /// size-bound.
   on-request: async func(ctx: context, player: borrow<player>, request: request-id, payload: list<u8>) -> result<list<u8>, error>;
 
   /// A raised signal this mod subscribed to. The payload carries everything
